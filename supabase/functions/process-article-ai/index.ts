@@ -66,17 +66,51 @@ serve(async (req) => {
     Format your output as a JSON object with keys 'type', 'sentiment', and 'teams'.
 
     Article:
-    ${article_content}
-    
-    `;
+    ${article_content}`;
+
+    const chatCompletion = await openai.chat.commpletions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'user', content: classificationPrompt }],
+      response_format: { type: 'json_object' },
+      temperature: 0,
+    });
+
+    const aiResponsecontent = chatCompletion.choices[0].message,content;
+    let aiParsedData: { type?: string; sentiment?: string; teams?: string[] } = {};
+
+    if (aiResponsecontent){
+      try{
+        aiParsedData = JSON.parse(aiResponsecontent);
+        if (aiParsedData.type) updateData.category = aiParsedData.type;
+        if (aiParsedData.sentiment) updateData.sentiment = aiParsedData.sentiment;
+        if (Array.isArray(aiParsedData.teams)) updateData.teams_mentioned = aiParsedData.teams;
+      } catch (parseError) {
+        console.error('Failed to parse AI response JSONL ', parseError);
+      }
+    }
 
 
+    // update article in supabase
+    const { error: updateError } = await supabase
+      .from('articles')
+      .update(updateData)
+      .eq('id', article_id);
+
+    if (updateError) throw updateError;
+
+    return new Response(JSON.stringify({ success: true, article_id, aiResponse: aiParsedData, moderation: updateData.is_flagged }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      status: 200,
+    });
+
+  } catch (error) {
+    console.error('Ai processing function error:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      status: 500,
+    });
   }
-
-
-
-
-})
+});
 
 /* To invoke locally:
 
