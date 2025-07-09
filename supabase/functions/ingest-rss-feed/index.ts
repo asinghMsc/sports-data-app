@@ -25,13 +25,13 @@ serve(async (req) => {
     }
 
     //try rss2json api
-    const rssToJsonApiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}';
+    const rssToJsonApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
     const rssResponse = await fetch(rssToJsonApiUrl);
     const rssData = await rssResponse.json()
 
     if (rssData.status !=='ok'){
       console.error('RSS2JSON API ERROR:', rssData.message);
-      return new Response(JSON.stringify({ error: 'Failed to parse RSS: ${rssData.message'}),
+      return new Response(JSON.stringify({ error: `Failed to parse RSS: ${rssData.message}`),
     { status: 500 });
 
     }
@@ -52,7 +52,7 @@ serve(async (req) => {
 
         if (insertError) {
           if (insertError.code == 23505) {
-            console.log('skipping duplicate article for source ${sourceId}:${item.link}');
+            console.log(`skipping duplicate article for source ${sourceId}:${item.link}`);
             continue;
           }
           throw insertError;
@@ -68,7 +68,7 @@ serve(async (req) => {
         });
 
       } catch (articleProcessError){
-        console.error('ERror processing single article:', articleProcessError);
+        console.error('Error processing single article:', articleProcessError);
       }
     }
 
