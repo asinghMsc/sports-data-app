@@ -6,7 +6,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
-const supabase = createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY);
+const LOCAL_DEV_JWT_SECRET = Deno.env.get('LOCAL_JWT_SECRET')
+
+
+const supabase = createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    jwtSecret: LOCAL_DEV_JWT_SECRET,
+  },
+});
 
 serve(async (req) => {
   if (req.method !== 'POST'){
