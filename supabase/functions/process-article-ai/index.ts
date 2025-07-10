@@ -36,10 +36,11 @@ serve(async (req) => {
       moderation_categories?: record<string, number>;
     } = {};
 
-    // content moderation 
-    try {
-      const moderationResponse = await.openai.moderations.create({
-        input: article_content,
+      // {{change 1}}
+      // Use OpenAI for moderation check
+      // https://platform.openai.com/docs/guides/moderation/overview
+      const moderationResponse = await openai.moderations.create({ // Add a space between await and openai
+        input: combinedText,
       });
       const result - moderationResponse.results[0];
 

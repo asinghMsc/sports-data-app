@@ -4,36 +4,62 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 // supabse and serve
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-const SUPABASE_SERVICE_ROLE_KEY - Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
 const supabase = createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY);
 
 serve(async (req) => {
   if (req.method !== 'POST'){
-    return new Response('Method not Allowed', 
+    return new Response('Method not Allowed',
       { status: 405 });
   }
 
   try {
-    const { url: rssUrl, sourceId } = await req.json();
+    // Read the raw request body as text first to inspect it
+    const rawBody = await req.text();
+    console.log('Received raw request body:', rawBody); 
+
+    // Attempt to parse the raw text body as JSON
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch (jsonError) {
+      console.error('Failed to parse JSON body:', jsonError);
+      return new Response(JSON.stringify({
+        error: 'Invalid JSON format in request body',
+        details: jsonError.message
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { url: rssUrl, sourceId } = parsedBody;
 
     if (!rssUrl || !sourceId) {
+      // Handle missing parameters with an error response
+      console.error('Missing rssUrl or sourceId in request body');
       return new Response(JSON.stringify({
-        error: 'Missing RSS URL or Source ID',
-        { status: 400 };
-      }))
+        error: 'Missing required parameters: url and sourceId',
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
+    // The rest of the function logic now proceeds only if url and sourceId are present
 
     //try rss2json api
     const rssToJsonApiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
     const rssResponse = await fetch(rssToJsonApiUrl);
     const rssData = await rssResponse.json()
 
-    if (rssData.status !=='ok'){
-      console.error('RSS2JSON API ERROR:', rssData.message);
-      return new Response(JSON.stringify({ error: `Failed to parse RSS: ${rssData.message}`),
-    { status: 500 });
-
+    if (rssData.status !== 'ok') {
+      console.error('Failed to parse RSS:', rssData.message);
+      // {{change 1}}
+      return new Response(JSON.stringify({ error: `Failed to parse RSS: ${rssData.message}` }), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 500,
+      });
     }
 
     let insertedCount = 0;
@@ -58,7 +84,8 @@ serve(async (req) => {
           throw insertError;
         }
 
-        insertedcount++;
+        
+        insertedCount++;
         const newArticle = data[0];
 
         //trigger ai processing for every new article, auth here for process article ai if we make private
@@ -84,7 +111,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Ingestion Function Error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Controle-Allow-Origin': '*'},
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
       status: 500,
     });
   }
