@@ -13,6 +13,45 @@ serve(async (req) => {
     return new Response('Method not Allowed',
       { status: 405 });
   }
+  
+  const authHeader = req.headers.get('Authorization');
+
+  if (!authHeader) {
+    return new REsponse(JSON.stringify({ error: 'Missing Authorization Header' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json'}
+    })
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'Invalid Authorization Header Format' }), {
+     status: 401, // Unauthorized
+     headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      console.error('JWT validation failed:', userError?.message || 'User not found');
+      return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+        status: 401, // Unauthorized
+        headers: { 'Content-Type': 'application/json' },
+      });
+   }
+
+   console.log('Authenticated user ID: ', user.id)
+
+  } catch (jwtError) {
+    console.error('JWT verification failed: ', jwtError);
+    return new Response(JSON.stringify({ error: 'internal server error during authnetication'}), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json'}
+    })
+  }
 
   try {
     // Read the raw request body as text first to inspect it

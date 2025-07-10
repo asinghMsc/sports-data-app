@@ -4,18 +4,17 @@ import { OpenAI } from "https://deno.land/x/openai@v4.68.1/mod.ts";
 
 // supabase
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-const SUPABASE_SERVICE_ROLE_KEY - Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const supabase = createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY);
+
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 //init OAI
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
 const openai = new OpenAI({
-  apiKey: Deno.env.get("OPENAI_API_KEY")!,
+  apiKey: OPENAI_API_KEY,
 });
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || '';
-
 //serve
-
 serve(async (req) => {
   if (req.method !== 'POST') {
     return new Response('Method not Allowed', { status: 405 });
@@ -28,21 +27,23 @@ serve(async (req) => {
       return new Response(JSON.stringify({error: 'Missing article_id or article_content'}), { status: 400 });
     }
 
+    
     let updateData: {
       category?: string;
       sentiment?: string;
       teams_mentioned?: string[];
       is_flagged?: boolean;
-      moderation_categories?: record<string, number>;
+      moderation_categories?: Record<string, number>;
     } = {};
 
-      // {{change 1}}
-      // Use OpenAI for moderation check
-      // https://platform.openai.com/docs/guides/moderation/overview
-      const moderationResponse = await openai.moderations.create({ // Add a space between await and openai
-        input: combinedText,
+    
+    try {
+
+      const moderationResponse = await openai.moderations.create({
+        input: article_content, 
       });
-      const result - moderationResponse.results[0];
+      
+      const result = moderationResponse.results[0];
 
       // flag but then killl it or just proceed for now? since it's a demo hm - proceed for now
       if (result.flagged) {
@@ -51,14 +52,15 @@ serve(async (req) => {
         updateData.moderation_categories = result.categories;
       } else {
         updateData.is_flagged = false;
-        updateData.moderation_cateogires = {};
+        
+        updateData.moderation_categories = {};
       }
     } catch (moderationError) {
       console.error('Error with openAI moderation API for article', article_id, ':', moderationError);
       // don't fail , just log and continue
     }
 
-    // classify, sentiment, team extraction 
+    // classify, sentiment, team extraction
     const classificationPrompt = `Analyse the following Football (not soccer) article and provide a JSON response.
     1. Classify its type as 'News', 'Opinion', or 'Banter'.
     2. DEtermine its sentiment as 'Positive', 'Negative', or 'Neutral'.
@@ -69,14 +71,16 @@ serve(async (req) => {
     Article:
     ${article_content}`;
 
-    const chatCompletion = await openai.chat.commpletions.create({
+    
+    const chatCompletion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'user', content: classificationPrompt }],
       response_format: { type: 'json_object' },
       temperature: 0,
     });
 
-    const aiResponsecontent = chatCompletion.choices[0].message,content;
+    
+    const aiResponsecontent = chatCompletion.choices[0].message.content;
     let aiParsedData: { type?: string; sentiment?: string; teams?: string[] } = {};
 
     if (aiResponsecontent){
