@@ -3,8 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 
 // !!! IMPORTANT !!!
 // Use your PRODUCTION Supabase URL and ANON key from your Supabase dashboard -> Project Settings -> API
-const supabaseUrl = 'http://127.0.0.1:54321';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 // Initialize the Supabase client
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -13,8 +11,8 @@ async function getProductionJwt() {
   // !!! IMPORTANT !!!
   // Replace with the email and password of a user that exists in your PRODUCTION Supabase Auth
   // You might need to sign up a user first via your deployed application or Supabase Studio
-  const email = 'amrit623@icloud.com'; // Replace with actual production user email
-  const password = 'HarryPotter2'; // Replace with actual production user password
+  const email = ''; // Replace with actual production user email
+  const password = ''; // Replace with actual production user password
 
   console.log(`Attempting to sign in production user: ${email}`);
 

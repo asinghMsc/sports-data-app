@@ -34,7 +34,7 @@ serve(async (req) => {
 
   if (!token) {
     return new Response(JSON.stringify({ error: 'Invalid Authorization Header Format' }), {
-     status: 401, // Unauthorized
+     status: 401, 
      headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -45,7 +45,7 @@ serve(async (req) => {
     if (userError || !user) {
       console.error('JWT validation failed:', userError?.message || 'User not found');
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
-        status: 401, // Unauthorized
+        status: 401, 
         headers: { 'Content-Type': 'application/json' },
       });
    }
