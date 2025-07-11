@@ -1,5 +1,5 @@
 import { SourcesManager } from "./components/SourcesManager";
-import './index.css'
+import './App.css'
 
 function App() {
   return (
@@ -8,3 +8,5 @@ function App() {
     </div>
   )
 }
+
+export default App;
