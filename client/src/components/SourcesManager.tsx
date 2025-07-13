@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface Source {
     id: string;
@@ -14,6 +15,7 @@ export function SourcesManager() {
     const [newSourceName, setNewSourceName] = useState('');
     const [loading, setLoading] = useState(false);
     const [ingesting, setIngesting] = useState<Record<string,boolean>>({});
+    const navigate = useNavigate();
     
 
     useEffect(() => {
@@ -31,12 +33,29 @@ export function SourcesManager() {
 
     const handleAddSource = async (e:React.FormEvent) => {
         e.preventDefault();
-        if (!newSourceUrl || ! newSourceName) return;
+        if (!newSourceUrl || !newSourceName) return;
 
         setLoading(true);
 
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData?.user) {
+            setLoading(false);
+            alert('You must be logged in to add a source.');
+            return;
+        }
+        const userId = userData.user.id;
+
+        console.log("Inserting new source for userId:", userId);
+
+        const payload = { url: newSourceUrl, name: newSourceName, user_id: userId };
+
+        console.log("Payload being sent to Supabase:", payload);
+
         //insert source into db
-        const { data: newSource, error:insertError } = await supabase .from('sources') .insert({ url: newSourceUrl, name: newSourceName }) .select();
+        const { data: newSource, error: insertError } = await supabase
+          .from('sources')
+          .insert(payload)
+          .select();
 
         setLoading(false);
         setNewSourceUrl('');
@@ -53,10 +72,8 @@ export function SourcesManager() {
             const sourceId = newSource[0].id;
             const url = newSource[0].url;
             setSources([...sources,newSource[0]]);
-
             triggerIngestion(sourceId,url);
         }
-
     };
 
     const triggerIngestion = async (sourceId: string, rssUrl:string) => {
@@ -94,6 +111,12 @@ export function SourcesManager() {
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">Manage RSS Sources</h1>
+            <button
+                onClick={() => navigate('/logout')}
+                className="px-3 py-1 rounded text-white bg-red-500 hover:bg-red-600"
+                >
+                Logout
+            </button>
 
             {/* Form to Add New Source */}
             <form onSubmit={handleAddSource} className="mb-8 p-4 border rounded shadow">

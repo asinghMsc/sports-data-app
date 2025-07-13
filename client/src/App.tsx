@@ -1,8 +1,19 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginForm } from './components/login-form';
 import { SignupForm} from './components/signup-form';
 import { SourcesManager } from "./components/SourcesManager";
 import './App.css'
+import { useNavigate } from 'react-router-dom';
+import { supabase } from './lib/supabase'
+
+function LogoutHandler() {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    supabase.auth.signOut().then(() => navigate("/login", { replace: true }));
+  }, [navigate]);
+  return null; 
+}
 
 function App() {
   return (
@@ -12,6 +23,8 @@ function App() {
         <div className="flex min-h-screen items-center justify-center bg-gray-100 p-8"> 
           <LoginForm />
         </div>
+      } />
+      <Route path="/logout" element={<LogoutHandler />
       } />
       <Route path="/signup" element={
         <div className="flex min-h-screen items-center justify-center bg-gray-100 p-8"> 
