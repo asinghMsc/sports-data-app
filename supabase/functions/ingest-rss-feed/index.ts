@@ -9,54 +9,66 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '
 const LOCAL_DEV_JWT_SECRET = Deno.env.get('LOCAL_JWT_SECRET')
 
 
+
 const supabase = createClient(SUPABASE_URL,SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
     jwtSecret: LOCAL_DEV_JWT_SECRET,
   },
 });
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE, PUT",
+  "Content-Type": "application/json",
+};
+
 serve(async (req) => {
-  if (req.method !== 'POST'){
-    return new Response('Method not Allowed',
-      { status: 405 });
-  }
-  
-  const authHeader = req.headers.get('Authorization');
-
-  if (!authHeader) {
-    return new REsponse(JSON.stringify({ error: 'Missing Authorization Header' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json'}
-    })
-  }
-
-  const token = authHeader.split('Bearer ')[1];
-
-  if (!token) {
-    return new Response(JSON.stringify({ error: 'Invalid Authorization Header Format' }), {
-     status: 401, 
-     headers: { 'Content-Type': 'application/json' },
+  // CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      status: 200,
+      headers: corsHeaders,
     });
   }
 
+  if (req.method !== 'POST') {
+    return new Response('Method not Allowed', {
+      status: 405,
+      headers: corsHeaders,
+    });
+  }
+
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'Missing Authorization Header' }), {
+      status: 401,
+      headers: corsHeaders,
+    });
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'Invalid Authorization Header Format' }), {
+      status: 401,
+      headers: corsHeaders,
+    });
+  }
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-
     if (userError || !user) {
       console.error('JWT validation failed:', userError?.message || 'User not found');
       return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
-        status: 401, 
-        headers: { 'Content-Type': 'application/json' },
+        status: 401,
+        headers: corsHeaders,
       });
-   }
-
-   console.log('Authenticated user ID: ', user.id)
-
+    }
+    console.log('Authenticated user ID: ', user.id)
   } catch (jwtError) {
     console.error('JWT verification failed: ', jwtError);
     return new Response(JSON.stringify({ error: 'internal server error during authnetication'}), {
       status: 500,
-      headers: { 'Content-Type': 'application/json'}
+      headers: corsHeaders,
     })
   }
 
@@ -76,7 +88,7 @@ serve(async (req) => {
         details: jsonError.message
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders,
       });
     }
 
@@ -89,7 +101,7 @@ serve(async (req) => {
         error: 'Missing required parameters: url and sourceId',
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders,
       });
     }
     // The rest of the function logic now proceeds only if url and sourceId are present
@@ -101,10 +113,9 @@ serve(async (req) => {
 
     if (rssData.status !== 'ok') {
       console.error('Failed to parse RSS:', rssData.message);
-      // {{change 1}}
       return new Response(JSON.stringify({ error: `Failed to parse RSS: ${rssData.message}` }), {
-        headers: { 'Content-Type': 'application/json' },
         status: 500,
+        headers: corsHeaders,
       });
     }
 
@@ -150,16 +161,15 @@ serve(async (req) => {
         .eq( 'id', sourceId);
 
     return new Response(JSON.stringify({ success: true, count: insertedCount }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
       status: 200,
+      headers: corsHeaders,
     });
 
   } catch (error) {
     console.error('Ingestion Function Error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
       status: 500,
+      headers: corsHeaders,
     });
   }
-
 });

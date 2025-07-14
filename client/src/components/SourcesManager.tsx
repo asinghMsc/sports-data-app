@@ -80,15 +80,24 @@ export function SourcesManager() {
         setIngesting(prev => ({ ...prev, [sourceId]: true}));
 
         try {
-            const localAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            // Get access token for logged in user
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+              alert('You must be logged in to ingest.');
+              return;
+            }
+            const accessToken = session.access_token;
 
             const response = await fetch('http://127.0.0.1:54321/functions/v1/ingest-rss-feed', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localAnonKey}`,
+                    'Authorization': `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({ url: rssUrl, sourceId: sourceId }),
+                body: JSON.stringify({ url: rssUrl, sourceId }),
             });
 
             const result = await response.json();
