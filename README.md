@@ -196,3 +196,24 @@ I’d refine the preprocessing pipeline using tools like regex and content-clean
 
 Scheduled Ingestion
 By adding periodic RSS feed ingestion (hourly or daily), triggered via Supabase Webhooks, the system could keep itself updated automatically—no manual effort required.
+
+## 2. Potential RAG implementations
+
+Semantic Article Search (Vector Search)
+Generate vector embeddings of each article using a model such as text-embedding-3-large. Store these in a vector database (e.g. pgvector in Supabase, Qdrant, Weaviate, or Pinecone).
+
+Benefit:
+Allows users to search articles based on meaning, not just exact keywords. Example queries might include:
+
+"Articles about dramatic comebacks"
+
+"Coverage of controversial referee decisions"
+
+Similar Articles / Related Reading
+Enable article clustering based on vector similarity. Suggested use cases:
+
+"Related articles" sections
+
+"You might also like" recommendations
+
+Remove near-duplicate content from different sources
