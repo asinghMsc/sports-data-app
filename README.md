@@ -15,7 +15,9 @@ This is a full-stack application that fetches sports news articles from RSS feed
 -   A filterable, Adjustable and sortable table to view all processed articles.
 
 ---
-<a href="https://ibb.co/yFQ8FKkm"><img src="https://i.ibb.co/DfR7fmMP/Screenshot-2025-07-14-161153.png" alt="Screenshot-2025-07-14-161153" border="0"></a>
+
+![App Screenshot](https://i.ibb.co/DfR7fmMP/Screenshot-2025-07-14-161153.png)
+
 
 ## Local Development Setup
 
