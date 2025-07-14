@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { ArticlesTable } from './ArticlesTable'
 
 interface Source {
     id: string;
@@ -192,6 +193,11 @@ export function SourcesManager() {
                         ))}
                     </ul>
                 )}
+            </div>
+
+            <div className="mt-8">
+                <h2 className="text-xl font-semibold mb-4">Articles</h2>
+                <ArticlesTable />
             </div>
         </div>
     );
