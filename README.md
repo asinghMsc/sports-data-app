@@ -245,3 +245,11 @@ Most mentioned teams
 Sentiment breakdown
 
 Daily/weekly ingestion volumes
+
+Split Source Management into Two Dedicated Pages
+Refactor the current "Source Management" page into two distinct interfaces:
+
+Source Addition Page: A streamlined form for adding new sources
+
+Source Overview Page: A table for viewing and managing existing sources
+
