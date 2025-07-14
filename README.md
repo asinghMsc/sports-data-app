@@ -30,4 +30,8 @@ Technical Challenge
 - update databases respectively
 
 
+#######frontend####
+
+React
+ShadCN
 

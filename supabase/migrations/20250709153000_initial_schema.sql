@@ -24,6 +24,14 @@ create table "public"."sources" (
 
 alter table "public"."sources" enable row level security;
 
+create table "public"."profiles" (
+    "id" uuid not null references auth.users on delete cascade,
+    "email" text,
+    primary key (id)
+);
+
+alter table "public"."profiles" enable row level security;
+
 CREATE UNIQUE INDEX articles_link_key ON public.articles USING btree (link);
 
 CREATE UNIQUE INDEX articles_pkey ON public.articles USING btree (id);
@@ -43,6 +51,36 @@ alter table "public"."articles" add constraint "articles_source_id_fkey" FOREIGN
 alter table "public"."articles" validate constraint "articles_source_id_fkey";
 
 alter table "public"."sources" add constraint "sources_url_key" UNIQUE using index "sources_url_key";
+
+
+create policy "Authenticated users can view articles from their sources."
+on "public"."articles" for select
+using ( exists (select 1 from sources where sources.id = articles.source_id and sources.user_id = auth.uid()) );
+
+create policy "Authenticated users can manage their own sources."
+on "public"."sources" for all
+using ( auth.uid() = user_id );
+
+create policy "Users can view own profile."
+on "public"."profiles" for select
+using ( auth.uid() = id );
+
+create function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, email)
+  values (new.id, new.email);
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 
 grant delete on table "public"."articles" to "anon";
 
