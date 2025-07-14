@@ -16,7 +16,8 @@ This is a full-stack application that fetches sports news articles from RSS feed
 
 ---
 
-![App Screenshot](https://ibb.co/pVXS7FJ)
+![App Screenshot](https://i.ibb.co/FZ7FrTg/Screenshot-2025-07-14-161153.png)
+
 
 ## Local Development Setup
 
