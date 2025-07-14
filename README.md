@@ -158,7 +158,18 @@ This table stores individual articles fetched from the RSS feeds.
 
 ## Application Logic
 
-The core logic of the application is orchestrated by two Supabase Edge Functions.
+The core logic of the application is orchestrated by a React frontend (utilising Tailwind CSS and ShadCN UI components) and two Supabase Edge Functions.
+
+1. Frontend Interaction (SourcesManager and Articles Display)
+The main user interaction happens on the SourcesManager page within the React frontend.
+
+Source Management: Authenticated users can add new RSS feed URLs via a form on this page. These sources are stored in the sources table.
+
+Ingestion Trigger: For each added source, a "Manual Ingest" button allows the user to initiate the fetching and processing of articles. This action triggers the ingest-rss-feed Supabase Edge Function.
+
+Articles Display: The frontend fetches articles directly from the Supabase articles table and displays them in a filterable, adjustable, data table (built with ShadCN UI and TanStack Table). This table provides a clear overview of all ingested and AI-processed content.
+
+User Tweakability of AI Classifications: A key requirement from the technical challenge was to allow users to "tweak" the AI's classifications. Rather than exposing complex prompt engineering directly to the user (which could potentially break the AI processing or lead to unexpected costs), I opted for a direct frontend modification approach. To demonstrate users can interact with the category fields directly within the articles table. If a user believes the AI's classification for a specific article is inappropriate (e.g., categorised as 'News' but should be 'Opinion'), they can manually change and save this value from the frontend. This demonstrates the user's ability to correct or refine the AI's output, offering practical control within the given time constraints.
 
 ### 1. `ingest-rss-feed`
 
