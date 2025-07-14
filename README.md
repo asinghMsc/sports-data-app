@@ -12,7 +12,7 @@ This is a full-stack application that fetches sports news articles from RSS feed
     -   Categorisation (News, Opinion, Banter)
     -   Sentiment Analysis (Positive, Negative, Neutral)
     -   Extraction of mentioned football teams.
--   A filterable, Adjustable and sortable table to view all processed articles.
+-   A filterable, Adjustable table to view all processed articles.
 
 ---
 
