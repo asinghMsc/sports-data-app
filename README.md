@@ -106,3 +106,77 @@ To stop all local Supabase services, run the following command from the project 
 npx supabase stop
 
 
+# Database Schema and Application Logic
+
+---
+
+## Database Schema
+
+The database schema is defined in `supabase/migrations/20250709153000_initial_schema.sql` and consists of three main tables:
+
+### `profiles`
+
+This table stores profile information for users. It is automatically populated by a database trigger (defined in the migration file) when a new user signs up via Supabase Auth.
+
+*   **`id`** (uuid, PK, FK): A unique identifier for the profile, linked directly to the `auth.users` table.
+*   **`email`** (text): The user's email address.
+
+### `sources`
+
+This table stores the RSS feed sources added by users. Each source is linked to a specific user profile via the `user_id`.
+
+*   **`id`** (uuid, PK): A unique identifier for the source.
+*   **`url`** (text, unique): The URL of the RSS feed.
+*   **`name`** (text): A user-friendly name for the source.
+*   **`last_crawled_at`** (timestamptz): Timestamp of the last time the feed was ingested.
+*   **`user_id`** (uuid, FK): A foreign key referencing the `id` in the `profiles` table, indicating which user added the source.
+
+### `articles`
+
+This table stores individual articles fetched from the RSS feeds.
+
+*   **`id`** (uuid, PK): A unique identifier for the article.
+*   **`source_id`** (uuid, FK): A foreign key referencing the `id` in the `sources` table.
+*   **`title`** (text): The title of the article.
+*   **`link`** (text, unique): The direct URL to the original article.
+*   **`published_at`** (timestamptz): The publication date of the article.
+*   **`content`** (text): The main content or description of the article.
+*   **`category`** (text): The AI-determined category (e.g., 'News', 'Opinion', 'Banter').
+*   **`sentiment`** (text): The AI-determined sentiment (e.g., 'Positive', 'Negative', 'Neutral').
+*   **`teams_mentioned`** (jsonb): A JSON array of football team names mentioned.
+*   **`is_flagged`** (boolean): `true` if the content was flagged by OpenAI's moderation endpoint.
+
+---
+
+-   **RLS Troubleshooting**: If you encounter issues adding sources after setting up user authentication, Row Level Security (RLS) on the `sources` table might be preventing inserts. You can temporarily disable RLS for testing by connecting to your local Supabase database and running `alter table public.sources disable row level security;`. Re-enable it afterwards with `alter table public.sources enable row level security;`.
+
+## Application Logic
+
+The core logic of the application is orchestrated by two Supabase Edge Functions.
+
+### 1. `ingest-rss-feed`
+
+This function is responsible for fetching and storing articles from a given RSS feed URL.
+
+*   **Trigger**: Manually triggered by an authenticated user from the frontend 'Ingest Now' button.
+*   **Process**:
+    1.  Receives an RSS `url` and `sourceId` from the client.
+    2.  Uses the third-party `rss2json.com` API to convert the XML RSS feed into a structured JSON format.
+    3.  Iterates through the articles in the JSON response.
+    4.  For each article, it inserts a new record into the `articles` table in the database. It skips duplicates based on the unique `link`.
+    5.  For every newly inserted article, it asynchronously invokes the `process-article-ai` function to perform AI analysis.
+    6.  Updates the `last_crawled_at` timestamp on the source.
+
+### 2. `process-article-ai`
+
+This function performs AI-based analysis on the content of a single article.
+
+*   **Trigger**: Invoked by the `ingest-rss-feed` function after a new article is saved.
+*   **Process**:
+    1.  Receives the `article_id` and `article_content`.
+    2.  **Moderation**: First, it sends the article content to OpenAI's Moderation API. If the content is flagged, `is_flagged` is set to `true`.
+    3.  **Classification**: It then uses the OpenAI Chat Completions API (`gpt-4o`) with a specific prompt to analyse the article. The prompt instructs the model to return a JSON object containing:
+        *   `type`: The article category ('News', 'Opinion', or 'Banter').
+        *   `sentiment`: The article's sentiment ('Positive', 'Negative', or 'Neutral').
+        *   `teams`: A list of all football teams mentioned.
+    4.  The function parses the AI's JSON response and updates the corresponding article record in the `articles` table with the new data (`category`, `sentiment`, `teams_mentioned`).
