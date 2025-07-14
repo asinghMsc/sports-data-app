@@ -104,7 +104,7 @@ To stop all local Supabase services, run the following command from the project 
 
 ```shell
 npx supabase stop
-
+```
 
 # Database Schema and Application Logic
 
