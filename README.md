@@ -16,7 +16,7 @@ This is a full-stack application that fetches sports news articles from RSS feed
 
 ---
 
-![App Screenshot](https://i.ibb.co/DfR7fmMP/Screenshot-2025-07-14-161153.png)
+![App Screenshot](https://ibb.co/yFQ8FKkm)
 
 
 ## Local Development Setup
@@ -183,3 +183,16 @@ This function performs AI-based analysis on the content of a single article.
         *   `sentiment`: The article's sentiment ('Positive', 'Negative', or 'Neutral').
         *   `teams`: A list of all football teams mentioned.
     4.  The function parses the AI's JSON response and updates the corresponding article record in the `articles` table with the new data (`category`, `sentiment`, `teams_mentioned`).
+
+
+    ---
+
+## Future Enhancements and Improvements
+
+## 1. Enhanced Content Ingestion & Preprocessing
+
+Smarter Text Cleaning
+I’d refine the preprocessing pipeline using tools like regex and content-cleaning libraries to strip away HTML, Markdown, and boilerplate text. This would help the AI focus on meaningful content and reduce unnecessary token usage.
+
+Scheduled Ingestion
+By adding periodic RSS feed ingestion (hourly or daily), triggered via Supabase Webhooks, the system could keep itself updated automatically—no manual effort required.
