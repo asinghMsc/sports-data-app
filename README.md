@@ -217,3 +217,31 @@ Enable article clustering based on vector similarity. Suggested use cases:
 "You might also like" recommendations
 
 Remove near-duplicate content from different sources
+
+Track vector similarity across time to:
+
+Identify recurring themes or rising trends (e.g. increase in VAR controversy)
+
+Show “topic arcs” over days or weeks
+
+## 3. Better User Experience (UI/UX)
+Advanced Filtering & Search
+I’d add powerful filtering options across multiple fields (title, sentiment, teams, etc.), with support for logical operators and multi-selects for better discovery.
+
+Live Ingestion Status
+Using Supabase Realtime, users could see live progress updates—e.g., “Ingesting 50/100 articles from BBC Sport...”
+
+In-App Notifications
+Real-time alerts for completed ingestions, errors, or flagged articles would help users stay informed without refreshing the page.
+
+Responsive UI Improvements
+I’d fine-tune the design for optimal usability across all devices—from phones to widescreen monitors.
+
+Custom Dashboards
+Users could build their own dashboards with widgets for things like:
+
+Most mentioned teams
+
+Sentiment breakdown
+
+Daily/weekly ingestion volumes
